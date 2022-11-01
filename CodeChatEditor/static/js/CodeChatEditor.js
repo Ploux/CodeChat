@@ -1,120 +1,60 @@
-// <details>
-//     <summary>Copyright (C) 2012-2022 Bryan A. Jones.</summary>
-//     <p>This file is part of CodeChat.</p>
-//     <p>CodeChat is free software: you can redistribute it and/or modify it
-//         under the terms of the GNU General Public License as published by the
-//         Free Software Foundation, either version 3 of the License, or (at
-//         your option) any later version.</p>
-//     <p>CodeChat is distributed in the hope that it will be useful, but
-//         WITHOUT ANY WARRANTY; without even the implied warranty of
-//         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-//         General Public License for more details.</p>
-//     <p>You should have received a copy of the GNU General Public License
-//         along with CodeChat. If not, see <a
-//             href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
-//     </p>
-// </details>
-// <h1><code>CodeChatEditor.js</code> &mdash; <strong>JavaScrip</strong>t which
-//     implements the client-side portion of the CodeChat Editor</h1>
-// <p>The CodeChat Editor provides a simple IDE which allows editing of mixed
-//     code and doc blocks.</p>
-// <h2>TODO</h2>
-// <ul>
-//     <li>Document modes.</li>
-//     <li>Implement raw mode; add a GUI to switch between view, edit, and raw
-//         modes.</li>
-// </ul>
-// <h2>Next steps</h2>
-// <ul>
-//     <li>Create a new repo or directory for the CodeChat Editor, with NPM and
-//         webpack set up. Use TypeScript.</li>
-// </ul>
-// <h2>Thoughts and ideas</h2>
-// <p>Need to write some components:</p>
-// <ul>
-//     <li>Autotitle: like an a, but takes the link&rsquo;s name from element
-//         linked to. Same for figure references, etc.</li>
-//     <li>A index tool -- provides links to all instances of the given term,
-//         plus a index page with all these terms. How to do this? It requires
-//         global state.
-//         <ul>
-//             <li>An index item is a link to a specific file (an index file;
-//                 it's possible to have multiple index files).</li>
-//             <li>Creating an index link involves adding the back link to the
-//                 index file. Saving a file with an index link updates the
-//                 index page as well.</li>
-//             <li>Need to track changes -- probably only allow deleting/editing
-//                 index links in the file they are defined, rather than in the
-//                 index.</li>
-//             <li>We need a way that enables easy nagivation through index
-//                 links.</li>
-//         </ul>
-//     </li>
-//     <li>Insert the name of the file.</li>
-// </ul>
+// The CodeChat Editor provides a simple IDE which allows editing of mixed code and doc blocks.
+
 "use strict";
 
-// <h2>UI</h2>
-// <h3>DOM ready event</h3>
-// <p>This is copied from <a
-//         href="https://developer.mozilla.org/en-US/docs/Web/API/Document/DOMContentLoaded_event#checking_whether_loading_is_already_complete">MDN</a>.
-// </p>
+// UI
+// DOM ready event
+
 const on_dom_content_loaded = on_load_func => {
     if (document.readyState === "loading") {
-        // <p>Loading hasn't finished yet.</p>
+        // Loading hasn't finished yet.
         document.addEventListener("DOMContentLoaded", on_load_func);
     } else {
-        // <p><code>DOMContentLoaded</code> has already fired.</p>
+        // DOMContentLoaded has already fired.
         on_load_func();
     }
 }
 
 
-// <p>Emulate an enum. <a
-//         href="https://www.30secondsofcode.org/articles/s/javascript-enum">This</a>
-//     seems like a simple-enough approach; see also <a
-//         href="https://masteringjs.io/tutorials/fundamentals/enum">JavaScript
-//         Enums</a> for other options.</p>
+// Enums for other options.
 const EditorMode = Object.freeze({
-    // <p>Display the source code using CodeChat, but disallow editing.</p>
+    // Display the source code using CodeChat, but disallow editing.
     view: 0,
-    // <p>For this source, the same a view; the server uses this to avoid
-    //     recursive iframes of the table of contents.</p>
+    // For this source, the same a view; the server uses this to avoid
+    //     recursive iframes of the table of contents.
     toc: 1,
-    // <p>The full CodeChat editor.</p>
+    // The full CodeChat editor.
     edit: 2,
-    // <p>Show only raw source code; ignore doc blocks, treating them also as
-    //     code.</p>
+    // Show only raw source code; ignore doc blocks, treating them also as
+    //     code.
     raw: 3
 });
 
 
-// <p>Load code when the DOM is ready.</p>
+// Load code when the DOM is ready.
 const page_init = (source_code, ext) => {
-    // <p>Get the mode from the page's query parameters. Default to edit using
-    //     the <a
-    //         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator">nullish
-    //         coalescing operator</a>.</p>
+    // Get the mode from the page's query parameters. Default to edit using
+    //     the nullish coalescing operator
     const urlParams = new URLSearchParams(window.location.search);
     const mode = EditorMode[urlParams.get("mode")] ?? EditorMode.edit;
     on_dom_content_loaded(() => open_lp(source_code, ext, mode));
 };
 
 
-// <p>This code instantiates editors/viewers for code and doc blocks.</p>
+// This code instantiates editors/viewers for code and doc blocks.
 const make_editors = (
-    // <p>A instance of the <code>EditorMode</code> enum.</p>
+    // A instance of the EditorMode enum.
     editorMode
 ) => {
-    // <p>In view mode, don't use TinyMCE, since we already have HTML. Raw mode
-    //     doesn't use TinyMCE at all, or even render doc blocks as HTML.</p>
+    // In view mode, don't use TinyMCE, since we already have HTML. Raw mode
+    //     doesn't use TinyMCE at all, or even render doc blocks as HTML.
     if (editorMode === EditorMode.edit) {
-        // <p>Instantiate the TinyMCE editor for doc blocks.</p>
+        // Instantiate the TinyMCE editor for doc blocks.
         tinymce.init({
-            // <p>See the <a
+            // See the <a
             //         href="https://www.tiny.cloud/docs/ui-components/contextmenu/">contextmenu
             //         docs</a> for the default value. TODO: this doesn't work!
-            // </p>
+        
             contextmenu: "align | forecolor backcolor | bold italic underline superscript subscript codeformat | image link lists table",
             // <p>Place the Tiny MCE menu bar at the top of the screen;
             //     otherwise, it floats in front of text, sometimes obscuring
