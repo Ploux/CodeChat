@@ -56,61 +56,54 @@ const make_editors = (
             //         docs</a> for the default value. TODO: this doesn't work!
         
             contextmenu: "align | forecolor backcolor | bold italic underline superscript subscript codeformat | image link lists table",
-            // <p>Place the Tiny MCE menu bar at the top of the screen;
+            // Place the Tiny MCE menu bar at the top of the screen;
             //     otherwise, it floats in front of text, sometimes obscuring
-            //     what the user wants to edit. See the <a
-            //         href="https://www.tiny.cloud/docs/configure/editor-appearance/#fixed_toolbar_container">docs</a>.
-            // </p>
+            //     what the user wants to edit.
             fixed_toolbar_container: "#CodeChat-menu",
             inline: true,
-            // <p>I would like to add to this: noneditable paste textpattern</p>
+            // I would like to add to this: noneditable paste textpattern
             plugins: 'advlist anchor charmap directionality emoticons help image link lists media nonbreaking pagebreak quickbars searchreplace table visualblocks visualchars',
-            // <p>When true, this still prevents hyperlinks to anchors on the
+            // When true, this still prevents hyperlinks to anchors on the
             //     current page from working correctly. There's an onClick
             //     handler that prevents links in the current page from working
             //     -- need to look into this. See also <a
             //         href="https://github.com/tinymce/tinymce/issues/3836">a
-            //         related GitHub issue</a>.</p>
+            //         related GitHub issue</a>.
             //readonly: true,
             relative_urls: true,
             selector: '.CodeChat-TinyMCE',
-            // <p>This combines the <a
+            // This combines the <a
             //         href="https://www.tiny.cloud/blog/tinymce-toolbar/">default
             //         TinyMCE toolbar buttons</a> with a few more from plugins.
-            // </p>
+            // 
             toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | ltr rtl | help',
-
-            // <h3>Settings for plugins</h3>
-            // <h4><a
-            //         href="https://www.tiny.cloud/docs/plugins/opensource/image/">Image</a>
-            // </h4>
             image_caption: true,
             image_advtab: true,
             image_title: true,
         });
     }
 
-    // <p>The CodeChat Document Editor doesn't include ACE.</p>
+    // The CodeChat Document Editor doesn't include ACE.
     if (window.ace !== undefined) {
-        // <p>Instantiate the Ace editor for code blocks.</p>
+        // Instantiate the Ace editor for code blocks.
         ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.9.5');
         for (const ace_tag of document.querySelectorAll(".CodeChat-ACE")) {
             ace.edit(ace_tag, {
-                // <p>The leading <code>+</code> converts the line number from a
+                // The leading <code>+</code> converts the line number from a
                 //     string (since all HTML attributes are strings) to a
-                //     number.</p>
+                //     number.
                 firstLineNumber: +ace_tag.getAttribute("data-CodeChat-firstLineNumber"),
-                // <p>This is distracting, since it highlights one line for each
+                // This is distracting, since it highlights one line for each
                 //     ACE editor instance on the screen. Better: only show this
-                //     if the editor has focus.</p>
+                //     if the editor has focus.
                 highlightActiveLine: false,
                 highlightGutterLine: false,
                 maxLines: 1e10,
                 mode: `ace/mode/${current_language_lexer[0]}`,
-                // <p>TODO: this still allows cursor movement. Need something
+                // TODO: this still allows cursor movement. Need something
                 //     that doesn't show an edit cursor / can't be selected;
                 //     arrow keys should scroll the display, not move the cursor
-                //     around in the editor.</p>
+                //     around in the editor.
                 readOnly: editorMode === EditorMode.view || editorMode == EditorMode.toc,
                 showPrintMargin: false,
                 theme: "ace/theme/textmate",
@@ -119,46 +112,42 @@ const make_editors = (
         }
     }
 
-    // <p>Set up for editing the indent of doc blocks.</p>
+    // Set up for editing the indent of doc blocks.
     for (const td of document.querySelectorAll(".CodeChat-doc-indent")) {
         td.addEventListener("beforeinput", doc_block_indent_on_before_input);
     }
 };
 
 
-// <p>Store the lexer info for the currently-loaded language.</p>
+// Store the lexer info for the currently-loaded language.
 let current_language_lexer;
 
 
-// <p>True if this is a CodeChat Editor document (not a source file).</p>
+// True if this is a CodeChat Editor document (not a source file).
 const is_doc_only = () => {
     return current_language_lexer[0] === "codechat-html";
 };
 
-
-// <h3>Doc block indent editor</h3>
-// <p>Allow only spaces and delete/backspaces when editing the indent of a doc
-//     block.</p>
+// Doc block indent editor
+// Allow only spaces and delete/backspaces when editing the indent of a doc block.
 const doc_block_indent_on_before_input = event => {
-    // <p>Only modify the behavior of inserts.</p>
+    // Only modify the behavior of inserts.
     if (event.data) {
-        // <p>Block any insert that's not an insert of spaces. TODO: need to
-        //     support tabs.</p>
+        // Block any insert that's not an insert of spaces. TODO: need to support tabs.
         if (event.data !== " ".repeat(event.data.length)) {
             event.preventDefault();
         }
     }
 }
 
-
 const open_lp = (source_code, extension, mode) => {
-    // <p>See if the first line of the file specifies a lexer.</p>
+    // See if the first line of the file specifies a lexer.
     const m = source_code.match(/^.*CodeChat-lexer:\s*(\w+)/);
     const lexer_name = m ? m[1] : "";
     let found = false;
     for (current_language_lexer of language_lexers) {
-        // <p>If the source code provided a lexer name, match only on that;
-        //     otherwise, match based on file extension.</p>
+        // If the source code provided a lexer name, match only on that;
+        //     otherwise, match based on file extension.
         if ((current_language_lexer[0] === lexer_name) || (!lexer_name && current_language_lexer[1].includes(extension))) {
             found = true;
             break;
@@ -175,38 +164,32 @@ const open_lp = (source_code, extension, mode) => {
     }
 
     document.getElementById("CodeChat-body").innerHTML = html;
-    // <p>Initialize editors for this new content.</p>
+    // Initialize editors for this new content.
     make_editors(mode);
 };
 
-
 const on_save_as = async on_save_func => {
-    // <p>TODO!</p>
+    // TODO!
     msg = "Save as is not implemented.";
     window.alert(msg);
     throw msg;
 };
 
-
-// <p>Save CodeChat Editor contents.</p>
+// Save CodeChat Editor contents.
 const on_save = async () => {
-    // <p>Pick an inline comment from the current lexer. TODO: support block
-    //     comments (CSS, for example, doesn't allow inline comment).</p>
+    // Pick an inline comment from the current lexer. TODO: support block
+    //     comments (CSS, for example, doesn't allow inline comment).
     const inline_comment = current_language_lexer[2][0];
-    // <p>This is the data to write &mdash; the source code.</p>
+    // This is the data to write &mdash; the source code.
     const source_code = editor_to_source_code(inline_comment);
     await save(source_code);
 };
 
 
-// <p>Per <a
-//         href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/platform#examples">MDN</a>,
-//     here's the least bad way to choose between the control key and the
-//     command key.</p>
+// Choose between control and command key for Apple
 const os_is_osx = (navigator.platform.indexOf("Mac") === 0 || navigator.platform === "iPhone") ? true : false;
 
-
-// <p>Provide a shortcut of ctrl-s (or command-s) to save the current file.</p>
+// Provide a shortcut of ctrl-s (or command-s) to save the current file.
 const on_keydown = (event) => {
     if ((event.key === "s") && ((event.ctrlKey && !os_is_osx) || (event.metaKey && os_is_osx)) && !event.altKey) {
         on_save();
@@ -214,11 +197,10 @@ const on_keydown = (event) => {
     }
 }
 
-
-// <p><a id="save"></a>Save the provided contents back to the filesystem, by
+// <a id="save"></a>Save the provided contents back to the filesystem, by
 //     sending a <code>PUT</code> request to the server. See the <a
 //         href="CodeChatEditorServer.v.html#save_file">save_file endpoint</a>.
-// </p>
+// 
 const save = async contents => {
     let response;
     try {
@@ -241,13 +223,13 @@ const save = async contents => {
 };
 
 
-// <h2>Load editor contents from source code</h2>
-// <p>This process is split between two functions: first, <a
+// Load editor contents from source code
+// This process is split between two functions: first, <a
 //         href="#source_lexer">split the source code into code blocks and doc
 //         blocks</a>; next, <a href="#classified_source_to_html">transform this
-//         into its web-editable form</a>.</p>
-// <p>Both the load and save routines need information about the programming
-//     language in order to load/save code in that language.</p>
+//         into its web-editable form</a>.
+// Both the load and save routines need information about the programming
+//     language in order to load/save code in that language.
 const language_lexers = [
     // <dl>
     //     <dt>IC</dt>
@@ -261,12 +243,12 @@ const language_lexers = [
     //         Language is JavaScript. (2 = inside a template literal should
     //         only be used by the lexer itself).</dd>
     // </dl>
-    // <p>C++11 or newer. Don't worry about supporting C or older C++ using
+    // C++11 or newer. Don't worry about supporting C or older C++ using
     //     another lexer entry, since the raw string syntax in C++11 and newer
     //     is IMHO so rare we won't encounter it in older code. See the <a
     //         href="https://en.cppreference.com/w/cpp/language/string_literal">C++
     //         string literals docs</a> for the reasoning behind the start body
-    //     regex.</p>
+    //     regex.
     //Language name File extensions     IC      Block comment       Long string     Short str   Heredoc JS tmpl lit
     ["c_cpp",       [".cc", ".cpp"],    ["//"], [["/*", "*/"]],     [],             ['"'],      [['R"', "[^()\\ ]", "(", ")", ""]], 0],
     ["html",        [".html"],          [],     [["<!--", "-->"]],  [],             [],         [],     0],
@@ -278,10 +260,10 @@ const language_lexers = [
 ];
 
 
-// <h2>Source lexer</h2>
-// <p>Rather than attempt to lex the entire language, this lexer's only goal is
+// Source lexer
+// Rather than attempt to lex the entire language, this lexer's only goal is
 //     to categorize all the source code into code blocks or doc blocks. To do
-//     it, it only needs to:</p>
+//     it, it only needs to:
 // <ul>
 //     <li>Recognize where comments can't be&mdash;inside strings, <a
 //             href="https://en.wikipedia.org/wiki/Here_document">here text</a>,
@@ -294,7 +276,7 @@ const language_lexers = [
 //     <li>After finding either an inline or block comment, determine if this is
 //         a doc block.</li>
 // </ul>
-// <p>It returns a list of <code>indent, string, indent_type</code> where:</p>
+// It returns a list of <code>indent, string, indent_type</code> where:
 // <dl>
 //     <dt><code>indent</code></dt>
 //     <dd>The indent of a doc block (a string of whitespace), or
@@ -316,78 +298,78 @@ const source_lexer = (
     here_text_strings,
     template_literals,
 ) => {
-    // <p>Construct <a
+    // Construct <a
     //         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">regex</a>
     //     and associated indices from language information provided.
     //     <strong>This code makes heavy use of regexes -- read the previous
-    //         link thoroughly.</strong></p>
+    //         link thoroughly.</strong>
     let regex_index = 1;
     let regex_strings = [];
     const regex_builder = (strings) => {
-        // <p>Look for a non-empty array. Note that <code>[]</code> is
-        //     <code>true</code>.</p>
+        // Look for a non-empty array. Note that <code>[]</code> is
+        //     <code>true</code>.
         if (strings.length) {
             regex_strings.push(
-                // <p>Escape any regex characters in these strings.</p>
+                // Escape any regex characters in these strings.
                 strings.map(escapeRegExp).join("|")
             );
             return regex_index++;
         }
         return null;
     }
-    // <p>Order these by length of the expected strings, since the regex with an
-    //     or expression will match left to right.</p>
-    // <p>Include only the opening block comment string (element 0) in the
-    //     regex.</p>
+    // Order these by length of the expected strings, since the regex with an
+    //     or expression will match left to right.
+    // Include only the opening block comment string (element 0) in the
+    //     regex.
     let block_comment_index = regex_builder(block_comment_strings.map(element => element[0]));
     let long_string_index = regex_builder(long_string_strings);
     let inline_comment_index = regex_builder(inline_comment_strings);
     let short_string_index = regex_builder(short_string_strings);
-    // <p>Template literals only exist in JavaScript. No other language (that I
+    // Template literals only exist in JavaScript. No other language (that I
     //     know of) allows comments inside these, or nesting of template
-    //     literals.</p>
+    //     literals.
     let template_literal_index = null;
     if (template_literals) {
-        // <p>If inside a template literal, look for a nested template literal
+        // If inside a template literal, look for a nested template literal
         //     (<code>`</code>) or the end of the current expression
-        //     (<code>}</code>).</p>
+        //     (<code>}</code>).
         regex_strings.push(template_literals === 1 ? "`" : "`|}");
         template_literal_index = regex_index++;
     }
     let classify_regex = new RegExp("(" + regex_strings.join(")|(") + ")");
 
     let classified_source = [];
-    // <p>An accumulating array of strings composing the current code block.</p>
+    // An accumulating array of strings composing the current code block.
     let code_block_array = [];
     while (source_code.length) {
-        // <p>Look for either a comment or a no-comment zone.</p>
+        // Look for either a comment or a no-comment zone.
         const m = source_code.match(classify_regex);
         if (m) {
-            // <p>Add everything preceding this match to the current code block.
-            // </p>
+            // Add everything preceding this match to the current code block.
+            // 
             code_block_array.push(source_code.substring(0, m.index));
             source_code = source_code.substring(m.index);
-            // <p>Figure out which matched.</p>
+            // Figure out which matched.
             if (inline_comment_index && m[inline_comment_index]) {
-                // <p>A comment matched.</p>
+                // A comment matched.
                 const inline_comment_string = m[inline_comment_index];
-                // <p>Look at the last line of code by examining the code block
-                //     being accumulated.</p>
+                // Look at the last line of code by examining the code block
+                //     being accumulated.
                 let code_block = code_block_array.join("");
                 const split_lines = code_block.split(/\n|\r\n|\r/)
-                // <p>If there's no matching newline, we're at the beginning of
-                //     the uncategorized source code.</p>
+                // If there's no matching newline, we're at the beginning of
+                //     the uncategorized source code.
                 const last_line = split_lines ? split_lines[split_lines.length - 1] : "";
 
-                // <p>Find the end of this comment. No matching newline means
+                // Find the end of this comment. No matching newline means
                 //     we're at the end of the file. Note that using a negative
                 //     lookbehind assertion would make this much simpler:
                 //     <code>/(?&lt;!\\)(\n|\r\n|\r)/</code>. However, V doesn't
-                //     support this.</p>
+                //     support this.
                 const inline_m = source_code.match(/(\\\r\n|\\\n|\\\r|[^\\\n\r])*(\n|\r\n|\r)/);
                 const full_comment = inline_m ? source_code.substring(0, inline_m.index + inline_m[0].length) : source_code;
 
-                // <p>Criteria for doc blocks for an inline comment:</p>
+                // Criteria for doc blocks for an inline comment:
                 // <ul>
                 //     <li>All characters preceding the comment on the current
                 //         line must be whitespace.</li>
@@ -400,38 +382,49 @@ const source_lexer = (
                 //         </ul>
                 //     </li>
                 // </ul>
-                // <p>Doc block comments have a space after the comment string
-                //     or are empty, and only spaces before the comment.</p>
+                // Doc block comments have a space after the comment string
+                //     or are empty, and only spaces before the comment.
                 if ((full_comment.startsWith(inline_comment_string + " ") || full_comment === inline_comment_string + (inline_m ? inline_m[1] : "")) && last_line.match(/^\s*$/)) {
-                    // <p>Transition from a code block to this doc block.</p>
+                    // Transition from a code block to this doc block.
                     code_block = code_block.substring(0, code_block.length - last_line.length)
                     if (code_block) {
-                        // <p>Save only code blocks with some content.</p>
+                        // Save only code blocks with some content.
                         classified_source.push([null, code_block, ""]);
                     }
                     code_block_array = [];
-                    // <p>Add this doc block.</p>
+                    // Add this doc block.
                     const has_space_after_comment = full_comment[inline_comment_string.length] === " ";
                     classified_source.push([last_line, full_comment.substring(inline_comment_string.length + (has_space_after_comment ? 1 : 0)), inline_comment_string]);
                 } else {
-                    // <p>This is still code.</p>
+                    // This is still code.
                     code_block_array.push(full_comment);
                 }
-                // <p>Move to the next block of source code to be lexed.</p>
+                // Move to the next block of source code to be lexed.
                 source_code = source_code.substring(full_comment.length);
             } else if (block_comment_index && m[block_comment_index]) {
-                // <p>TODO!</p>
-                const msg = "Block comments not implemented.";
-                window.alert(msg);
-                throw msg;
+                // A block comment matched.
+                const block_comment_string = m[block_comment_index];
+                // Find the end of this comment. No matching newline means
+                //     we're at the end of the file.
+                const block_m = source_code.match(new RegExp(escapeRegExp(block_comment_string[1]) + "|" + escapeRegExp(block_comment_string[0])));
+                const full_comment = block_m ? source_code.substring(0, block_m.index + block_m[0].length) : source_code;
+                // Add this block comment.
+                classified_source.push([null, full_comment, block_comment_string[0]]);
+                // Move to the next block of source code to be lexed.
+                source_code = source_code.substring(full_comment.length);
+               
+                // TODO!
+                // const msg = "Block comments not implemented.";
+                // window.alert(msg);
+                // throw msg;
             } else if (long_string_index && m[long_string_index]) {
-                // <p>A long string. Find the end of it.</p>
+                // A long string. Find the end of it.
                 code_block_array.push(m[long_string_index]);
                 source_code = source_code.substring(m[long_string_index].length);
                 const string_m = source_code.match(m[long_string_index]);
-                // <p>Add this to the code block, then move forward. If it's not
+                // Add this to the code block, then move forward. If it's not
                 //     found, the quote wasn't properly closed; add the rest of
-                //     the code.</p>
+                //     the code.
                 if (string_m) {
                     const index = string_m.index + string_m[0].length;
                     code_block_array.push(source_code.substring(0, index));
@@ -441,45 +434,45 @@ const source_lexer = (
                     source_code = "";
                 }
             } else if (short_string_index && m[short_string_index]) {
-                // <p>A short string. Find the end of it.</p>
+                // A short string. Find the end of it.
                 code_block_array.push(m[short_string_index]);
                 source_code = source_code.substring(m[short_string_index].length);
                 const string_m = source_code.match(
-                    // <p>Use <a
+                    // Use <a
                     //         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/raw"><code>String.raw</code></a>
                     //     so we don't have to double the number of backslashes
                     //     in this regex. Joining regex literals doesn't work
                     //     &ndash; <code>/.a/ +
                     //         /b/</code> produces the string
                     //     <code>'/.a//b/'</code>, not a regex. The regex is:
-                    // </p>
-                    // <p>Look for anything that doesn't terminate a string:</p>
+                    // 
+                    // Look for anything that doesn't terminate a string:
                     "(" +
-                        // <p>a backslash followed by a newline (in all three
-                        //     newline styles);</p>
+                        // a backslash followed by a newline (in all three
+                        //     newline styles);
                         String.raw`\\\r\n|\\\n|\\\r|` +
-                        // <p>a backslash followed by any non-newline character
+                        // a backslash followed by any non-newline character
                         //     (note that the <code>.</code> character class <a
                         //         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Character_Classes#types">doesn't
                         //         match newlines</a>; using the <code>s</code>
                         //     or <code>dotAll</code> flag causes it to match <a
                         //         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#line_terminators">line
                         //         terminators</a> that we don't recognize, plus
-                        //     not match a <code>\r\n</code> sequence);</p>
+                        //     not match a <code>\r\n</code> sequence);
                         String.raw`\\.|` +
-                        // <p>anything that's not a backslash, quote mark, or
-                        //     newline.</p>
+                        // anything that's not a backslash, quote mark, or
+                        //     newline.
                         String.raw`[^\\${m[short_string_index]}\n\r]` +
-                    // <p>Find as many of these as possible. Therefore, the next
-                    //     token will be the end of the string.</p>
+                    // Find as many of these as possible. Therefore, the next
+                    //     token will be the end of the string.
                     ")*" +
-                    // <p>A string is terminated by either a quote mark or a
+                    // A string is terminated by either a quote mark or a
                     //     newline. (We can't just put <code>.</code>, because
                     //     one flavor of newline is two characters; in addition,
                     //     that character class doesn't match newlines, as
                     //     stated above.) Terminating strings at a newline helps
                     //     avoid miscategorizing large chunks of code that the
-                    //     compiler likewise flags as a syntax error.</p>
+                    //     compiler likewise flags as a syntax error.
                     String.raw`(${m[short_string_index]}|\r\n|\n|\r)`
                 );
                 if (string_m) {
@@ -491,8 +484,8 @@ const source_lexer = (
                     source_code = "";
                 }
             } else if (template_literal_index && m[template_literal_index]) {
-                // <p>TODO! For now, just assume there's no comments in
-                //     here...dangerous!!!</p>
+                // TODO! For now, just assume there's no comments in
+                //     here...dangerous!!!
                 code_block_array.push(m[template_literal_index]);
                 source_code = source_code.substring(m[template_literal_index].length);
             } else {
@@ -500,13 +493,13 @@ const source_lexer = (
                 debugger;
             }
         } else {
-            // <p>The rest of the source code is in the code block.</p>
+            // The rest of the source code is in the code block.
             code_block_array.push(source_code);
             source_code = "";
         }
     }
 
-    // <p>Include any accumulated code in the classification.</p>
+    // Include any accumulated code in the classification.
     const code = code_block_array.join("")
     if (code) {
         classified_source.push([null, code, ""]);
@@ -516,39 +509,39 @@ const source_lexer = (
 };
 
 
-// <h2 id="classified_source_to_html">Convert lexed code into HTML</h2>
+// <h2 id="classified_source_to_html">Convert lexed code into HTML
 const classified_source_to_html = (classified_source) => {
-    // <p>An array of strings for the new content of the current HTML page.</p>
+    // An array of strings for the new content of the current HTML page.
     let html = [];
 
-    // <p>Keep track of the current type. Begin with neither comment nor code.
-    // </p>
+    // Keep track of the current type. Begin with neither comment nor code.
+    // 
     let current_indent = -2
 
-    // <p>Keep track of the current line number.</p>
+    // Keep track of the current line number.
     let line = 1
 
     for (let [indent, source_string, comment_string] of classified_source) {
-        // <p><span id="newline-movement">In a code or doc block, omit the last
+        // <span id="newline-movement">In a code or doc block, omit the last
         //         newline; otherwise, code blocks would show an extra newline
         //         at the end of the block. (Doc blocks ending in a
         //         <code>&lt;pre&gt;</code> tag or something similar would also
         //         have this problem). To do this, remove the newline from the
         //         end of the current line, then prepend it to the beginning of
-        //         the next line.</span></p>
+        //         the next line.</span>
         const m = source_string.match(/(\n|\r\n|\r)$/);
         if (m) {
             source_string = source_string.substring(0, m.index);
         }
 
-        // <p>See if there's a change in state.</p>
+        // See if there's a change in state.
         if (current_indent !== indent) {
-            // <p>Exit the current state.</p>
+            // Exit the current state.
             _exit_state(current_indent, html)
 
-            // <p>Enter the new state.</p>
+            // Enter the new state.
             if (indent === null) {
-                // <p>Code state: emit the beginning of an ACE editor block.</p>
+                // Code state: emit the beginning of an ACE editor block.
                 html.push(
 `
 <div class="CodeChat-code">
@@ -557,11 +550,11 @@ const classified_source_to_html = (classified_source) => {
                 )
 
             } else {
-                // <p>Comment state: emit an opening indent for non-zero
-                //     indents; insert a TinyMCE editor.</p>
-                // <p><span id="one-row-table">Use a one-row table to lay out a
+                // Comment state: emit an opening indent for non-zero
+                //     indents; insert a TinyMCE editor.
+                // <span id="one-row-table">Use a one-row table to lay out a
                 //         doc block, so that it aligns properly with a code
-                //         block.</span></p>
+                //         block.</span>
                 html.push(
 `<div class="CodeChat-doc">
     <table>
@@ -577,45 +570,45 @@ const classified_source_to_html = (classified_source) => {
                 )
             }
         } else {
-            // <p><span id="newline-prepend"><a href="#newline-movement">Newline
+            // <span id="newline-prepend"><a href="#newline-movement">Newline
             //             movement</a>: prepend the newline removed from the
-            //         previous line to the current line</span>.</p>
+            //         previous line to the current line</span>.
             html.push(m[0], indent === null ? escapeHTML(source_string) : source_string);
         }
 
-        // <p>Update the state.</p>
+        // Update the state.
         current_indent = indent
-        // <p>There are an unknown number of newlines in this source string. One
+        // There are an unknown number of newlines in this source string. One
         //     was removed <a href="#newline-movement">here</a>, so include that
-        //     in the count.</p>
+        //     in the count.
         line += 1 + (source_string.match(/\n|\r\n|\r/g) || []).length
     }
 
-    // <p>When done, exit the last state.</p>
+    // When done, exit the last state.
     _exit_state(current_indent, html)
     return html.join("");
 };
 
 
-// <h3>_exit_state</h3>
-// <p>Output text produced when exiting a state. Supports <a
+// _exit_state
+// Output text produced when exiting a state. Supports <a
 //         href="#_generate_web_editable"><code>_generate_web_editable</code></a>.
-// </p>
+// 
 const _exit_state = (
-    // <p>The type (classification) of the last line.</p>
+    // The type (classification) of the last line.
     indent,
-    // <p>An array of string to store output in.</p>
+    // An array of string to store output in.
     html,
 ) => {
 
     if (indent === null) {
-        // <p>Close the current code block.</p>
+        // Close the current code block.
         html.push("</div>\n</div>\n");
     } else if (typeof indent === "string") {
-        // <p>Close the current doc block without adding any trailing spaces
+        // Close the current doc block without adding any trailing spaces
         //     &mdash; combining this with the next line would add indentation.
-        // </p>
-        //</p>
+        // 
+        //
         html.push(
 `</td>
             </tr>
@@ -628,65 +621,65 @@ const _exit_state = (
 }
 
 
-// <h2>Save editor contents to source code</h2>
-// <p>This transforms the current editor contents into source code.</p>
+// Save editor contents to source code
+// This transforms the current editor contents into source code.
 const editor_to_source_code = (
-    // <p>A string specifying the comment character(s) for the current
+    // A string specifying the comment character(s) for the current
     //     programming language. A space will be added after this string before
-    //     appending a line of doc block contents.</p>
+    //     appending a line of doc block contents.
     comment_string
 ) => {
-    // <p>Walk through each code and doc block, extracting its contents then
-    //     placing it in <code>classified_lines</code>.</p>
+    // Walk through each code and doc block, extracting its contents then
+    //     placing it in <code>classified_lines</code>.
     let classified_lines = [];
     for (const code_or_doc_tag of document.querySelectorAll(".CodeChat-ACE, .CodeChat-TinyMCE")) {
-        // <p>The type of this block: <code>null</code> for code, or &gt;= 0 for
-        //     doc (the value of n specifies the indent in spaces).</p>
+        // The type of this block: <code>null</code> for code, or &gt;= 0 for
+        //     doc (the value of n specifies the indent in spaces).
         let indent;
-        // <p>A string containing all the code/docs in this block.</p>
+        // A string containing all the code/docs in this block.
         let full_string;
 
-        // <p>Get the type of this block and its contents.</p>
+        // Get the type of this block and its contents.
         if (code_or_doc_tag.classList.contains("CodeChat-ACE")) {
             indent = null;
             full_string = ace.edit(code_or_doc_tag).getValue();
         } else if (code_or_doc_tag.classList.contains("CodeChat-TinyMCE")) {
-            // <p>Get the indent from the previous table cell. For a CodeChat
+            // Get the indent from the previous table cell. For a CodeChat
             //     Editor document, there's no indent (it's just a doc block).
-            // </p>
+            // 
             indent = is_doc_only() ? null : code_or_doc_tag.parentElement.previousElementSibling.textContent;
-            // <p>See <a
+            // See <a
             //         href="https://www.tiny.cloud/docs/tinymce/6/apis/tinymce.root/#get"><code>get</code></a>
             //     and <a
             //         href="https://www.tiny.cloud/docs/tinymce/6/apis/tinymce.editor/#getContent"><code>getContent()</code></a>.
             //     Fortunately, it looks like TinyMCE assigns a unique ID if
             //     one's no provided, since it only operates on an ID instead of
-            //     the element itself.</p>
+            //     the element itself.
             full_string = tinymce.get(code_or_doc_tag.id).getContent();
-            // <p>The HTML from TinyMCE is a mess! Wrap at 80 characters,
-            //     including the length of the indent and comment string.</p>
+            // The HTML from TinyMCE is a mess! Wrap at 80 characters,
+            //     including the length of the indent and comment string.
             full_string = html_beautify(full_string, { "wrap_line_length": 80 - (indent || "").length - comment_string.length - 1 });
         } else {
             console.assert(false, `Unexpected class for code or doc block ${code_or_doc_tag}.`);
         }
 
-        // <p>Split the <code>full_string</code> into individual lines; each one
-        //     corresponds to an element of <code>classified_lines</code>.</p>
+        // Split the <code>full_string</code> into individual lines; each one
+        //     corresponds to an element of <code>classified_lines</code>.
         for (const string of full_string.split(/\r?\n/)) {
             classified_lines.push([indent, string + "\n"]);
         }
     }
 
-    // <p>Transform these classified lines into source code.</p>
+    // Transform these classified lines into source code.
     let lines = [];
     for (const [indent, string] of classified_lines) {
         if (indent === null) {
-            // <p>Just dump code out! Or a CodeChat Editor document, where the
-            //     indent doesn't matter.</p>
+            // Just dump code out! Or a CodeChat Editor document, where the
+            //     indent doesn't matter.
             lines.push(string);
         } else {
-            // <p>Prefix comments with the indent and the comment string.</p>
-            // <p>TODO: allow the use of block comments.</p>
+            // Prefix comments with the indent and the comment string.
+            // TODO: allow the use of block comments.
             lines.push(`${indent}${comment_string} ${string}`);
         }
     }
@@ -695,15 +688,15 @@ const editor_to_source_code = (
 };
 
 
-// <h2>Helper functions</h2>
-// <p>Given text, escape it so it formats correctly as HTML. Because the
+// Helper functions
+// Given text, escape it so it formats correctly as HTML. Because the
 //     solution at https://stackoverflow.com/a/48054293 transforms newlines into
 //     <br>(see
 //     https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/innerText),
 //     it's not usable with code. Instead, this is a translation of Python's
-//     <code>html.escape</code> function.</p>
+//     <code>html.escape</code> function.
 const escapeHTML = unsafeText => {
-    // <p>Must be done first!</p>
+    // Must be done first!
     unsafeText = unsafeText.replaceAll("&", "&amp;")
     unsafeText = unsafeText.replaceAll("<", "&lt;")
     unsafeText = unsafeText.replaceAll(">", "&gt;")
@@ -711,16 +704,16 @@ const escapeHTML = unsafeText => {
 };
 
 
-// <p>This function comes from the <a
+// This function comes from the <a
 //         href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping">MDN
-//         docs</a>.</p>
+//         docs</a>.
 const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g,
-    // <p><code>$&amp;</code> means the whole matched string.</p>
+    // <code>$&amp;</code> means the whole matched string.
     '\\$&');
 
 
-// <h2>Unit tests</h2>
-// <p>TODO!</p>
+// Unit tests
+// TODO!
 const test_source_lexer_1 = () => {
     const python_source_lexer = source_code => source_lexer(source_code, ...language_lexers[3]);
     assert_equals(python_source_lexer(""), []);
@@ -730,24 +723,24 @@ const test_source_lexer_1 = () => {
     assert_equals(python_source_lexer("# Test"), [["", "Test", "#"]]);
     assert_equals(python_source_lexer("# Test\n"), [["", "Test\n", "#"]]);
     assert_equals(python_source_lexer("# Test\n\n"), [["", "Test\n", "#"], [null, "\n", ""]]);
-    // <p>Short string with line join.</p>
+    // Short string with line join.
     assert_equals(python_source_lexer("'\\\n# Test'\n"), [[null, "'\\\n# Test'\n", ""]]);
     assert_equals(python_source_lexer('"\\\n# Test"\n'), [[null, '"\\\n# Test"\n', ""]]);
-    // <p>Short string terminated with newline (syntax error) followed by a
-    //     comment.</p>
+    // Short string terminated with newline (syntax error) followed by a
+    //     comment.
     assert_equals(python_source_lexer("'\\\\\n# Test'\n"), [[null, "'\\\\\n", ""], ["", "Test'\n", "#"]]);
     assert_equals(python_source_lexer('"\\\\\n# Test"\n'), [[null, '"\\\\\n', ""], ["", 'Test"\n', "#"]]);
-    // <p>Long string with newlines around comment.</p>
+    // Long string with newlines around comment.
     assert_equals(python_source_lexer('"""\n# Test\n"""'), [[null, '"""\n# Test\n"""', ""]]);
     assert_equals(python_source_lexer("'''\n# Test\n'''"), [[null, "'''\n# Test\n'''", ""]]);
-    // <p>Unterminated long strings.</p>
+    // Unterminated long strings.
     assert_equals(python_source_lexer('"""\n# Test\n'), [[null, '"""\n# Test\n', ""]]);
     assert_equals(python_source_lexer("'''\n# Test\n"), [[null, "'''\n# Test\n", ""]]);
-    // <p>Comments that aren't doc blocks.</p>
+    // Comments that aren't doc blocks.
     assert_equals(python_source_lexer("  a = 1 # Test"), [[null, "  a = 1 # Test", ""]]);
     assert_equals(python_source_lexer("\n  a = 1 # Test"), [[null, "\n  a = 1 # Test", ""]]);
     assert_equals(python_source_lexer("  a = 1 # Test\n"), [[null, "  a = 1 # Test\n", ""]]);
-    // <p>Doc blocks.</p>
+    // Doc blocks.
     assert_equals(python_source_lexer("   # Test"), [["   ", "Test", "#"]]);
     assert_equals(python_source_lexer("\n   # Test"), [[null, "\n", ""], ["   ", "Test", "#"]]);
 
@@ -760,7 +753,7 @@ const test_source_lexer = () => {
 };
 
 
-// <p>Woefully inadequate, but enough for testing.</p>
+// Woefully inadequate, but enough for testing.
 const assert_equals = (a, b) => {
     console.assert(a.length === b.length);
     for (let index = 0; index < a.length; ++index) {
